@@ -57,10 +57,11 @@ def load_rocstories_dataset(dataset_path):
     """ Output a list of tuples(story, 1st continuation, 2nd continuation, label) """
     with open(dataset_path, encoding='utf_8') as f:
         f = csv.reader(f)
-        output = []
         next(f) # skip the first line
-        for line in tqdm(f):
-            output.append((' '.join(line[1:5]), line[5], line[6], int(line[-1])-1))
+        output = [
+            (' '.join(line[1:5]), line[5], line[6], int(line[-1]) - 1)
+            for line in tqdm(f)
+        ]
     return output
 
 def pre_process_datasets(encoded_datasets, input_len, cap_length, start_token, delimiter_token, clf_token):
@@ -144,7 +145,9 @@ def main():
     # These new embeddings will be fine-tuned on the RocStories dataset
     special_tokens = ['_start_', '_delimiter_', '_classify_']
     tokenizer = OpenAIGPTTokenizer.from_pretrained(args.model_name, special_tokens=special_tokens)
-    special_tokens_ids = list(tokenizer.convert_tokens_to_ids(token) for token in special_tokens)
+    special_tokens_ids = [
+        tokenizer.convert_tokens_to_ids(token) for token in special_tokens
+    ]
     model = OpenAIGPTDoubleHeadsModel.from_pretrained(args.model_name, num_special_tokens=len(special_tokens))
     model.to(device)
 
@@ -157,7 +160,8 @@ def main():
             return tokenizer.convert_tokens_to_ids(tokenizer.tokenize(obj))
         elif isinstance(obj, int):
             return obj
-        return list(tokenize_and_encode(o) for o in obj)
+        return [tokenize_and_encode(o) for o in obj]
+
     logger.info("Encoding dataset...")
     train_dataset = load_rocstories_dataset(args.train_dataset)
     eval_dataset = load_rocstories_dataset(args.eval_dataset)
@@ -187,9 +191,23 @@ def main():
         param_optimizer = list(model.named_parameters())
         no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-            ]
+            {
+                'params': [
+                    p
+                    for n, p in param_optimizer
+                    if all(nd not in n for nd in no_decay)
+                ],
+                'weight_decay': 0.01,
+            },
+            {
+                'params': [
+                    p
+                    for n, p in param_optimizer
+                    if any(nd in n for nd in no_decay)
+                ],
+                'weight_decay': 0.0,
+            },
+        ]
         num_train_optimization_steps = len(train_dataloader) * args.num_train_epochs
         optimizer = OpenAIAdam(optimizer_grouped_parameters,
                                lr=args.learning_rate,

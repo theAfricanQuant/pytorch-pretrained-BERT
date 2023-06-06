@@ -58,8 +58,7 @@ def gpt2Tokenizer(*args, **kwargs):
         >>> text = "Who was Jim Henson ?"
         >>> indexed_tokens = tokenizer.encode(tokenized_text)
     """
-    tokenizer = GPT2Tokenizer.from_pretrained(*args, **kwargs)
-    return tokenizer
+    return GPT2Tokenizer.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt2_docstring)
@@ -92,8 +91,7 @@ def gpt2Model(*args, **kwargs):
                 hidden_states_1, past = model(tokens_tensor_1)
                 hidden_states_2, past = model(tokens_tensor_2, past=past)
     """
-    model = GPT2Model.from_pretrained(*args, **kwargs)
-    return model
+    return GPT2Model.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt2_docstring)
@@ -130,8 +128,7 @@ def gpt2LMHeadModel(*args, **kwargs):
         >>> predicted_token = tokenizer.decode([predicted_index])
         >>> assert predicted_token == ' who'
     """
-    model = GPT2LMHeadModel.from_pretrained(*args, **kwargs)
-    return model
+    return GPT2LMHeadModel.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt2_docstring)
@@ -164,5 +161,4 @@ def gpt2DoubleHeadsModel(*args, **kwargs):
         >>> with torch.no_grad():
                 lm_logits, multiple_choice_logits, presents = model(tokens_tensor, mc_token_ids)
     """
-    model = GPT2DoubleHeadsModel.from_pretrained(*args, **kwargs)
-    return model
+    return GPT2DoubleHeadsModel.from_pretrained(*args, **kwargs)

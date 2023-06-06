@@ -80,13 +80,13 @@ def load_tf_weights_in_gpt2(model, gpt2_checkpoint_path):
             "https://www.tensorflow.org/install/ for installation instructions.")
         raise
     tf_path = os.path.abspath(gpt2_checkpoint_path)
-    print("Converting TensorFlow checkpoint from {}".format(tf_path))
+    print(f"Converting TensorFlow checkpoint from {tf_path}")
     # Load weights from TF model
     init_vars = tf.train.list_variables(tf_path)
     names = []
     arrays = []
     for name, shape in init_vars:
-        print("Loading TF weight {} with shape {}".format(name, shape))
+        print(f"Loading TF weight {name} with shape {shape}")
         array = tf.train.load_variable(tf_path, name)
         names.append(name)
         arrays.append(array.squeeze())
@@ -100,11 +100,11 @@ def load_tf_weights_in_gpt2(model, gpt2_checkpoint_path):
                 l = re.split(r'(\d+)', m_name)
             else:
                 l = [m_name]
-            if l[0] == 'w' or l[0] == 'g':
+            if l[0] in ['w', 'g']:
                 pointer = getattr(pointer, 'weight')
             elif l[0] == 'b':
                 pointer = getattr(pointer, 'bias')
-            elif l[0] == 'wpe' or l[0] == 'wte':
+            elif l[0] in ['wpe', 'wte']:
                 pointer = getattr(pointer, l[0])
                 pointer = getattr(pointer, 'weight')
             else:
@@ -117,7 +117,7 @@ def load_tf_weights_in_gpt2(model, gpt2_checkpoint_path):
         except AssertionError as e:
             e.args += (pointer.shape, array.shape)
             raise
-        print("Initialize PyTorch weight {}".format(name))
+        print(f"Initialize PyTorch weight {name}")
         pointer.data = torch.from_numpy(array)
     return model
 
@@ -217,8 +217,7 @@ class GPT2Config(object):
 
     def to_dict(self):
         """Serializes this instance to a Python dictionary."""
-        output = copy.deepcopy(self.__dict__)
-        return output
+        return copy.deepcopy(self.__dict__)
 
     def to_json_string(self):
         """Serializes this instance to a JSON string."""
@@ -307,10 +306,7 @@ class Attention(nn.Module):
     def split_heads(self, x, k=False):
         new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
         x = x.view(*new_x_shape)  # in Tensorflow implem: fct split_states
-        if k:
-            return x.permute(0, 2, 3, 1)  # (batch, head, head_features, seq_length)
-        else:
-            return x.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
+        return x.permute(0, 2, 3, 1) if k else x.permute(0, 2, 1, 3)
 
     def forward(self, x, layer_past=None, head_mask=None):
         x = self.c_attn(x)
@@ -334,9 +330,7 @@ class Attention(nn.Module):
         a = self.merge_heads(a)
         a = self.c_proj(a)
         a = self.resid_dropout(a)
-        if self.output_attentions:
-            return attentions, a, present
-        return a, present
+        return (attentions, a, present) if self.output_attentions else (a, present)
 
 
 class MLP(nn.Module):
@@ -373,9 +367,7 @@ class Block(nn.Module):
         x = x + a
         m = self.mlp(self.ln_2(x))
         x = x + m
-        if self.output_attentions:
-            return attentions, x, present
-        return x, present
+        return (attentions, x, present) if self.output_attentions else (x, present)
 
 
 class GPT2LMHead(nn.Module):
@@ -422,9 +414,7 @@ class GPT2MultipleChoiceHead(nn.Module):
         multiple_choice_h = hidden_states.gather(2, mc_token_ids).squeeze(2)
         # (bsz, num_choices, hidden_size)
         multiple_choice_h = self.dropout(multiple_choice_h.transpose(1, 2)).transpose(1, 2)
-        multiple_choice_logits = self.linear(multiple_choice_h).squeeze(-1)
-        # (bsz, num_choices)
-        return multiple_choice_logits
+        return self.linear(multiple_choice_h).squeeze(-1)
 
 
 class GPT2PreTrainedModel(nn.Module):
@@ -436,11 +426,7 @@ class GPT2PreTrainedModel(nn.Module):
         super(GPT2PreTrainedModel, self).__init__()
         if not isinstance(config, GPT2Config):
             raise ValueError(
-                "Parameter config in `{}(config)` should be an instance of class `GPT2Config`. "
-                "To create a model from a pretrained model use "
-                "`model = {}.from_pretrained(PRETRAINED_MODEL_NAME)`".format(
-                    self.__class__.__name__, self.__class__.__name__
-                )
+                f"Parameter config in `{self.__class__.__name__}(config)` should be an instance of class `GPT2Config`. To create a model from a pretrained model use `model = {self.__class__.__name__}.from_pretrained(PRETRAINED_MODEL_NAME)`"
             )
         self.config = config
 
@@ -536,11 +522,11 @@ class GPT2PreTrainedModel(nn.Module):
         for key in state_dict.keys():
             new_key = None
             if key.endswith(".g"):
-                new_key = key[:-2] + ".weight"
+                new_key = f"{key[:-2]}.weight"
             elif key.endswith(".b"):
-                new_key = key[:-2] + ".bias"
+                new_key = f"{key[:-2]}.bias"
             elif key.endswith(".w"):
-                new_key = key[:-2] + ".weight"
+                new_key = f"{key[:-2]}.weight"
             if new_key:
                 old_keys.append(key)
                 new_keys.append(new_key)
@@ -570,15 +556,15 @@ class GPT2PreTrainedModel(nn.Module):
             start_model = model.transformer
         load(start_model, prefix="")
 
-        if len(missing_keys) > 0:
+        if missing_keys:
             logger.info(
                 "Weights of {} not initialized from pretrained model: {}".format(model.__class__.__name__, missing_keys)
             )
-        if len(unexpected_keys) > 0:
+        if unexpected_keys:
             logger.info(
                 "Weights from pretrained model not used in {}: {}".format(model.__class__.__name__, unexpected_keys)
             )
-        if len(error_msgs) > 0:
+        if error_msgs:
             raise RuntimeError(
                 "Error(s) in loading state_dict for {}:\n\t{}".format(model.__class__.__name__, "\n\t".join(error_msgs))
             )
@@ -830,9 +816,9 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
             shift_labels = lm_labels[..., 1:].contiguous()
             # Flatten the tokens
             loss_fct = CrossEntropyLoss(ignore_index=-1)
-            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)),
-                            shift_labels.view(-1))
-            return loss
+            return loss_fct(
+                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+            )
         if self.transformer.output_attentions:
             return all_attentions, lm_logits, presents
         return lm_logits, presents

@@ -124,12 +124,11 @@ class BertModelTest(unittest.TestCase):
             model = BertModel(config=config)
             model.eval()
             all_encoder_layers, pooled_output = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "sequence_output": all_encoder_layers[-1],
                 "pooled_output": pooled_output,
                 "all_encoder_layers": all_encoder_layers,
             }
-            return outputs
 
         def check_bert_model_output(self, result):
             self.parent.assertListEqual(
@@ -146,11 +145,10 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, token_labels)
             prediction_scores = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "prediction_scores": prediction_scores,
             }
-            return outputs
 
         def check_bert_for_masked_lm_output(self, result):
             self.parent.assertListEqual(
@@ -162,11 +160,10 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, sequence_labels)
             seq_relationship_score = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "seq_relationship_score": seq_relationship_score,
             }
-            return outputs
 
         def check_bert_for_next_sequence_prediction_output(self, result):
             self.parent.assertListEqual(
@@ -179,12 +176,11 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, token_labels, sequence_labels)
             prediction_scores, seq_relationship_score = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "prediction_scores": prediction_scores,
                 "seq_relationship_score": seq_relationship_score,
             }
-            return outputs
 
         def check_bert_for_pretraining_output(self, result):
             self.parent.assertListEqual(
@@ -200,12 +196,11 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, sequence_labels, sequence_labels)
             start_logits, end_logits = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "start_logits": start_logits,
                 "end_logits": end_logits,
             }
-            return outputs
 
         def check_bert_for_question_answering_output(self, result):
             self.parent.assertListEqual(
@@ -221,11 +216,10 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, sequence_labels)
             logits = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "logits": logits,
             }
-            return outputs
 
         def check_bert_for_sequence_classification_output(self, result):
             self.parent.assertListEqual(
@@ -238,11 +232,10 @@ class BertModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, token_type_ids, input_mask, token_labels)
             logits = model(input_ids, token_type_ids, input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "logits": logits,
             }
-            return outputs
 
         def check_bert_for_token_classification_output(self, result):
             self.parent.assertListEqual(
@@ -263,11 +256,10 @@ class BertModelTest(unittest.TestCase):
             logits = model(multiple_choice_inputs_ids,
                            multiple_choice_token_type_ids,
                            multiple_choice_input_mask)
-            outputs = {
+            return {
                 "loss": loss,
                 "logits": logits,
             }
-            return outputs
 
         def check_bert_for_multiple_choice(self, result):
             self.parent.assertListEqual(
@@ -466,10 +458,7 @@ class BertModelTest(unittest.TestCase):
         for dim in shape:
             total_dims *= dim
 
-        values = []
-        for _ in range(total_dims):
-            values.append(rng.randint(0, vocab_size - 1))
-
+        values = [rng.randint(0, vocab_size - 1) for _ in range(total_dims)]
         return torch.tensor(data=values, dtype=torch.long).view(shape).contiguous()
 
 

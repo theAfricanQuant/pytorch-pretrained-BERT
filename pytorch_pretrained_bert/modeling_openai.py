@@ -50,10 +50,25 @@ def load_tf_weights_in_openai_gpt(model, openai_checkpoint_folder_path):
     import re
     import numpy as np
     print("Loading weights...")
-    names = json.load(open(openai_checkpoint_folder_path + '/parameters_names.json', "r", encoding='utf-8'))
-    shapes = json.load(open(openai_checkpoint_folder_path + '/params_shapes.json', "r", encoding='utf-8'))
+    names = json.load(
+        open(
+            f'{openai_checkpoint_folder_path}/parameters_names.json',
+            "r",
+            encoding='utf-8',
+        )
+    )
+    shapes = json.load(
+        open(
+            f'{openai_checkpoint_folder_path}/params_shapes.json',
+            "r",
+            encoding='utf-8',
+        )
+    )
     offsets = np.cumsum([np.prod(shape) for shape in shapes])
-    init_params = [np.load(openai_checkpoint_folder_path + '/params_{}.npy'.format(n)) for n in range(10)]
+    init_params = [
+        np.load(f'{openai_checkpoint_folder_path}/params_{n}.npy')
+        for n in range(10)
+    ]
     init_params = np.split(np.concatenate(init_params, 0), offsets)[:-1]
     init_params = [param.reshape(shape) for param, shape in zip(init_params, shapes)]
 
@@ -88,12 +103,10 @@ def load_tf_weights_in_openai_gpt(model, openai_checkpoint_folder_path):
                 l = re.split(r'(\d+)', m_name)
             else:
                 l = [m_name]
-            if l[0] == 'g':
+            if l[0] == 'g' or l[0] != 'b' and l[0] == 'w':
                 pointer = getattr(pointer, 'weight')
             elif l[0] == 'b':
                 pointer = getattr(pointer, 'bias')
-            elif l[0] == 'w':
-                pointer = getattr(pointer, 'weight')
             else:
                 pointer = getattr(pointer, l[0])
             if len(l) >= 2:
@@ -109,7 +122,7 @@ def load_tf_weights_in_openai_gpt(model, openai_checkpoint_folder_path):
         except AssertionError as e:
             e.args += (pointer.shape, array.shape)
             raise
-        print("Initialize PyTorch weight {}".format(name))
+        print(f"Initialize PyTorch weight {name}")
         pointer.data = torch.from_numpy(array)
     return model
 
@@ -220,8 +233,7 @@ class OpenAIGPTConfig(object):
 
     def to_dict(self):
         """Serializes this instance to a Python dictionary."""
-        output = copy.deepcopy(self.__dict__)
-        return output
+        return copy.deepcopy(self.__dict__)
 
     def to_json_string(self):
         """Serializes this instance to a JSON string."""
@@ -247,12 +259,11 @@ class Conv1D(nn.Module):
             raise NotImplementedError
 
     def forward(self, x):
-        if self.rf == 1:
-            size_out = x.size()[:-1] + (self.nf,)
-            x = torch.addmm(self.bias, x.view(-1, x.size(-1)), self.weight)
-            x = x.view(*size_out)
-        else:
+        if self.rf != 1:
             raise NotImplementedError
+        size_out = x.size()[:-1] + (self.nf,)
+        x = torch.addmm(self.bias, x.view(-1, x.size(-1)), self.weight)
+        x = x.view(*size_out)
         return x
 
 
@@ -318,10 +329,7 @@ class Attention(nn.Module):
     def split_heads(self, x, k=False):
         new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
         x = x.view(*new_x_shape)  # in Tensorflow implem: fct split_states
-        if k:
-            return x.permute(0, 2, 3, 1)
-        else:
-            return x.permute(0, 2, 1, 3)
+        return x.permute(0, 2, 3, 1) if k else x.permute(0, 2, 1, 3)
 
     def forward(self, x, head_mask=None):
         x = self.c_attn(x)
@@ -340,9 +348,7 @@ class Attention(nn.Module):
         a = self.merge_heads(a)
         a = self.c_proj(a)
         a = self.resid_dropout(a)
-        if self.output_attentions:
-            return attentions, a
-        return a
+        return (attentions, a) if self.output_attentions else a
 
 
 class MLP(nn.Module):
@@ -377,9 +383,7 @@ class Block(nn.Module):
         n = self.ln_1(x + a)
         m = self.mlp(n)
         h = self.ln_2(n + m)
-        if self.output_attentions:
-            return attentions, h
-        return h
+        return (attentions, h) if self.output_attentions else h
 
 
 class OpenAIGPTLMHead(nn.Module):
@@ -427,9 +431,7 @@ class OpenAIGPTMultipleChoiceHead(nn.Module):
         multiple_choice_h = hidden_states.gather(2, mc_token_ids).squeeze(2)
         # (bsz, num_choices, hidden_size)
         multiple_choice_h = self.dropout(multiple_choice_h.transpose(1, 2)).transpose(1, 2)
-        multiple_choice_logits = self.linear(multiple_choice_h).squeeze(-1)
-        # (bsz, num_choices)
-        return multiple_choice_logits
+        return self.linear(multiple_choice_h).squeeze(-1)
 
 
 class OpenAIGPTPreTrainedModel(nn.Module):
@@ -441,11 +443,7 @@ class OpenAIGPTPreTrainedModel(nn.Module):
         super(OpenAIGPTPreTrainedModel, self).__init__()
         if not isinstance(config, OpenAIGPTConfig):
             raise ValueError(
-                "Parameter config in `{}(config)` should be an instance of class `OpenAIGPTConfig`. "
-                "To create a model from a pretrained model use "
-                "`model = {}.from_pretrained(PRETRAINED_MODEL_NAME)`".format(
-                    self.__class__.__name__, self.__class__.__name__
-                )
+                f"Parameter config in `{self.__class__.__name__}(config)` should be an instance of class `OpenAIGPTConfig`. To create a model from a pretrained model use `model = {self.__class__.__name__}.from_pretrained(PRETRAINED_MODEL_NAME)`"
             )
         self.config = config
 
@@ -539,11 +537,11 @@ class OpenAIGPTPreTrainedModel(nn.Module):
         for key in state_dict.keys():
             new_key = None
             if key.endswith(".g"):
-                new_key = key[:-2] + ".weight"
+                new_key = f"{key[:-2]}.weight"
             elif key.endswith(".b"):
-                new_key = key[:-2] + ".bias"
+                new_key = f"{key[:-2]}.bias"
             elif key.endswith(".w"):
-                new_key = key[:-2] + ".weight"
+                new_key = f"{key[:-2]}.weight"
             if new_key:
                 old_keys.append(key)
                 new_keys.append(new_key)
@@ -573,15 +571,15 @@ class OpenAIGPTPreTrainedModel(nn.Module):
             start_model = model.transformer
         load(start_model, prefix="")
 
-        if len(missing_keys) > 0:
+        if missing_keys:
             logger.info(
                 "Weights of {} not initialized from pretrained model: {}".format(model.__class__.__name__, missing_keys)
             )
-        if len(unexpected_keys) > 0:
+        if unexpected_keys:
             logger.info(
                 "Weights from pretrained model not used in {}: {}".format(model.__class__.__name__, unexpected_keys)
             )
-        if len(error_msgs) > 0:
+        if error_msgs:
             raise RuntimeError(
                 "Error(s) in loading state_dict for {}:\n\t{}".format(model.__class__.__name__, "\n\t".join(error_msgs))
             )
@@ -832,9 +830,9 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPreTrainedModel):
             shift_labels = lm_labels[..., 1:].contiguous()
             # Flatten the tokens
             loss_fct = CrossEntropyLoss(ignore_index=-1)
-            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)),
-                            shift_labels.view(-1))
-            return loss
+            return loss_fct(
+                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+            )
         if self.transformer.output_attentions:
             return all_attentions, lm_logits
         return lm_logits

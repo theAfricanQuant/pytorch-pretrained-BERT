@@ -94,9 +94,7 @@ class TokenizationTest(unittest.TestCase):
             "##ing"
         ]
 
-        vocab = {}
-        for (i, token) in enumerate(vocab_tokens):
-            vocab[token] = i
+        vocab = {token: i for i, token in enumerate(vocab_tokens)}
         tokenizer = WordpieceTokenizer(vocab=vocab)
 
         self.assertListEqual(tokenizer.tokenize(""), [])

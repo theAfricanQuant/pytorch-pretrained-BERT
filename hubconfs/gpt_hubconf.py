@@ -84,8 +84,7 @@ def openAIGPTTokenizer(*args, **kwargs):
         >>> indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
         [763, 509, 4265, 2298, 945, 257, 4265, 2298, 945, 509, 246, 10148, 39041, 483]
     """
-    tokenizer = OpenAIGPTTokenizer.from_pretrained(*args, **kwargs)
-    return tokenizer
+    return OpenAIGPTTokenizer.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt_docstring)
@@ -114,8 +113,7 @@ def openAIGPTModel(*args, **kwargs):
         >>> with torch.no_grad():
                 hidden_states = model(tokens_tensor)
     """
-    model = OpenAIGPTModel.from_pretrained(*args, **kwargs)
-    return model
+    return OpenAIGPTModel.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt_docstring)
@@ -148,8 +146,7 @@ def openAIGPTLMHeadModel(*args, **kwargs):
 		>>> predicted_token = tokenizer.convert_ids_to_tokens([predicted_index])[0]
         '.</w>'
     """
-    model = OpenAIGPTLMHeadModel.from_pretrained(*args, **kwargs)
-    return model
+    return OpenAIGPTLMHeadModel.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(gpt_docstring)
@@ -182,5 +179,4 @@ def openAIGPTDoubleHeadsModel(*args, **kwargs):
         >>> with torch.no_grad():
                 lm_logits, multiple_choice_logits = model(tokens_tensor, mc_token_ids)
     """
-    model = OpenAIGPTDoubleHeadsModel.from_pretrained(*args, **kwargs)
-    return model
+    return OpenAIGPTDoubleHeadsModel.from_pretrained(*args, **kwargs)

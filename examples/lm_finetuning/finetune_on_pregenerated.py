@@ -47,12 +47,13 @@ def convert_example_to_features(example, tokenizer, max_seq_length):
     lm_label_array = np.full(max_seq_length, dtype=np.int, fill_value=-1)
     lm_label_array[masked_lm_positions] = masked_label_ids
 
-    features = InputFeatures(input_ids=input_array,
-                             input_mask=mask_array,
-                             segment_ids=segment_array,
-                             lm_label_ids=lm_label_array,
-                             is_next=is_random_next)
-    return features
+    return InputFeatures(
+        input_ids=input_array,
+        input_mask=mask_array,
+        segment_ids=segment_array,
+        lm_label_ids=lm_label_array,
+        is_next=is_random_next,
+    )
 
 
 class PregeneratedDataset(Dataset):

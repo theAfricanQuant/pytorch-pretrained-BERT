@@ -108,11 +108,10 @@ class GPT2ModelTest(unittest.TestCase):
             model = GPT2Model(config)
             model.eval()
             hidden_states, presents = model(input_ids, position_ids, token_type_ids)
-            outputs = {
+            return {
                 "hidden_states": hidden_states,
                 "presents": presents,
             }
-            return outputs
 
         def check_gpt2_model_output(self, result):
             self.parent.assertEqual(len(result["hidden_states"]), self.n_layer + 1)
@@ -127,12 +126,11 @@ class GPT2ModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, position_ids, token_type_ids, lm_labels)
             lm_logits, presents = model(input_ids, position_ids, token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
                 "presents": presents,
             }
-            return outputs
 
         def create_gpt2_lm_head_with_output_attention(self, config, input_ids, token_type_ids, position_ids,
                                        mc_labels, lm_labels, mc_token_ids):
@@ -140,13 +138,12 @@ class GPT2ModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, position_ids, token_type_ids, lm_labels)
             attentions, lm_logits, presents = model(input_ids, position_ids, token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
                 "presents": presents,
                 "attentions": attentions,
             }
-            return outputs
 
         def check_gpt2_lm_head_output(self, result):
             total_voc = self.n_special + self.vocab_size
@@ -171,13 +168,12 @@ class GPT2ModelTest(unittest.TestCase):
                          lm_labels=lm_labels, mc_labels=mc_labels,
                          token_type_ids=token_type_ids, position_ids=position_ids)
             lm_logits, mc_logits, presents = model(input_ids, mc_token_ids, position_ids=position_ids, token_type_ids=token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
                 "mc_logits": mc_logits,
                 "presents": presents,
             }
-            return outputs
 
         def create_gpt2_double_heads_with_output_attention(self, config, input_ids, token_type_ids, position_ids,
                                        mc_labels, lm_labels, mc_token_ids):
@@ -187,14 +183,13 @@ class GPT2ModelTest(unittest.TestCase):
                          lm_labels=lm_labels, mc_labels=mc_labels,
                          token_type_ids=token_type_ids, position_ids=position_ids)
             attentions, lm_logits, mc_logits, presents = model(input_ids, mc_token_ids, position_ids=position_ids, token_type_ids=token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
                 "mc_logits": mc_logits,
                 "presents": presents,
                 "attentions": attentions,
             }
-            return outputs
 
         def check_gpt2_double_heads_output(self, result):
             total_voc = self.n_special + self.vocab_size
@@ -353,10 +348,7 @@ class GPT2ModelTest(unittest.TestCase):
         for dim in shape:
             total_dims *= dim
 
-        values = []
-        for _ in range(total_dims):
-            values.append(rng.randint(0, vocab_size - 1))
-
+        values = [rng.randint(0, vocab_size - 1) for _ in range(total_dims)]
         return torch.tensor(data=values, dtype=torch.long).view(shape).contiguous()
 
 

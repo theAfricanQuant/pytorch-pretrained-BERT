@@ -102,13 +102,12 @@ class TransfoXLModelTest(unittest.TestCase):
 
             hidden_states_1, mems_1 = model(input_ids_1)
             hidden_states_2, mems_2 = model(input_ids_2, mems_1)
-            outputs = {
+            return {
                 "hidden_states_1": hidden_states_1,
                 "mems_1": mems_1,
                 "hidden_states_2": hidden_states_2,
                 "mems_2": mems_2,
             }
-            return outputs
 
         def check_transfo_xl_model_output(self, result):
             self.parent.assertListEqual(
@@ -118,11 +117,13 @@ class TransfoXLModelTest(unittest.TestCase):
                 list(result["hidden_states_2"].size()),
                 [self.batch_size, self.seq_length, self.d_model])
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_1"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_1"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_2"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_2"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
 
 
         def create_transfo_xl_lm_head(self, config, input_ids_1, input_ids_2, lm_labels):
@@ -135,7 +136,7 @@ class TransfoXLModelTest(unittest.TestCase):
             loss_2, mems_2a = model(input_ids_2, target=lm_labels, mems=mems_1a)
             lm_logits_2, mems_2b = model(input_ids_2, mems=mems_1b)
 
-            outputs = {
+            return {
                 "loss_1": loss_1,
                 "mems_1a": mems_1a,
                 "lm_logits_1": lm_logits_1,
@@ -145,7 +146,6 @@ class TransfoXLModelTest(unittest.TestCase):
                 "lm_logits_2": lm_logits_2,
                 "mems_2b": mems_2b,
             }
-            return outputs
 
         def check_transfo_xl_lm_head_output(self, result):
             self.parent.assertListEqual(
@@ -155,14 +155,17 @@ class TransfoXLModelTest(unittest.TestCase):
                 list(result["lm_logits_1"].size()),
                 [self.batch_size, self.seq_length, self.vocab_size])
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_1a"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_1a"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_1b"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_1b"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
             self.parent.assertListEqual(
-                list(mem[~torch.isnan(mem)].sum() for mem in result["mems_1a"]),
-                list(mem[~torch.isnan(mem)].sum() for mem in result["mems_1b"]))
+                [mem[~torch.isnan(mem)].sum() for mem in result["mems_1a"]],
+                [mem[~torch.isnan(mem)].sum() for mem in result["mems_1b"]],
+            )
 
             self.parent.assertListEqual(
                 list(result["loss_2"].size()),
@@ -171,14 +174,17 @@ class TransfoXLModelTest(unittest.TestCase):
                 list(result["lm_logits_2"].size()),
                 [self.batch_size, self.seq_length, self.vocab_size])
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_2a"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_2a"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
             self.parent.assertListEqual(
-                list(list(mem.size()) for mem in result["mems_2b"]),
-                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer)
+                [list(mem.size()) for mem in result["mems_2b"]],
+                [[self.mem_len, self.batch_size, self.d_model]] * self.n_layer,
+            )
             self.parent.assertListEqual(
-                list(mem[~torch.isnan(mem)].sum() for mem in result["mems_2a"]),
-                list(mem[~torch.isnan(mem)].sum() for mem in result["mems_2b"]))
+                [mem[~torch.isnan(mem)].sum() for mem in result["mems_2a"]],
+                [mem[~torch.isnan(mem)].sum() for mem in result["mems_2b"]],
+            )
 
     def test_default(self):
         self.run_tester(TransfoXLModelTest.TransfoXLModelTester(self))
@@ -226,10 +232,7 @@ class TransfoXLModelTest(unittest.TestCase):
         for dim in shape:
             total_dims *= dim
 
-        values = []
-        for _ in range(total_dims):
-            values.append(rng.randint(0, vocab_size - 1))
-
+        values = [rng.randint(0, vocab_size - 1) for _ in range(total_dims)]
         return torch.tensor(data=values, dtype=torch.long).view(shape).contiguous()
 
 

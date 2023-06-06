@@ -119,10 +119,9 @@ class OpenAIGPTModelTest(unittest.TestCase):
             model = OpenAIGPTModel(config)
             model.eval()
             hidden_states = model(input_ids, position_ids, token_type_ids)
-            outputs = {
+            return {
                 "hidden_states": hidden_states,
             }
-            return outputs
 
         def check_openai_model_output(self, result):
             self.parent.assertEqual(len(result["hidden_states"]), self.n_layer + 1)
@@ -137,11 +136,10 @@ class OpenAIGPTModelTest(unittest.TestCase):
             model.eval()
             loss = model(input_ids, position_ids, token_type_ids, lm_labels)
             lm_logits = model(input_ids, position_ids, token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
             }
-            return outputs
 
         def check_openai_lm_head_output(self, result):
             total_voc = self.n_special + self.vocab_size
@@ -162,12 +160,11 @@ class OpenAIGPTModelTest(unittest.TestCase):
                          lm_labels=lm_labels, mc_labels=mc_labels,
                          token_type_ids=token_type_ids, position_ids=position_ids)
             lm_logits, mc_logits = model(input_ids, mc_token_ids, position_ids=position_ids, token_type_ids=token_type_ids)
-            outputs = {
+            return {
                 "loss": loss,
                 "lm_logits": lm_logits,
                 "mc_logits": mc_logits,
             }
-            return outputs
 
         def check_openai_double_heads_output(self, result):
             total_voc = self.n_special + self.vocab_size
@@ -327,10 +324,7 @@ class OpenAIGPTModelTest(unittest.TestCase):
         for dim in shape:
             total_dims *= dim
 
-        values = []
-        for _ in range(total_dims):
-            values.append(rng.randint(0, vocab_size - 1))
-
+        values = [rng.randint(0, vocab_size - 1) for _ in range(total_dims)]
         return torch.tensor(data=values, dtype=torch.long).view(shape).contiguous()
 
 

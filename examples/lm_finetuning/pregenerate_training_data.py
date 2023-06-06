@@ -106,7 +106,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
     with several refactors to clean it up and remove a lot of unnecessary variables."""
     cand_indices = []
     for (i, token) in enumerate(tokens):
-        if token == "[CLS]" or token == "[SEP]":
+        if token in ["[CLS]", "[SEP]"]:
             continue
         # Whole Word Masking means that if we mask all of the wordpieces
         # corresponding to an original word. When a word has been split into
@@ -117,7 +117,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
         # Note that Whole Word Masking does *not* change the training code
         # at all -- we still predict each WordPiece independently, softmaxed
         # over the entire vocabulary.
-        if (whole_word_mask and len(cand_indices) >= 1 and token.startswith("##")):
+        if whole_word_mask and cand_indices and token.startswith("##"):
             cand_indices[-1].append(i)
         else:
             cand_indices.append([i])
@@ -134,11 +134,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
         # predictions, then just skip this candidate.
         if len(masked_lms) + len(index_set) > num_to_mask:
             continue
-        is_any_index_covered = False
-        for index in index_set:
-            if index in covered_indexes:
-                is_any_index_covered = True
-                break
+        is_any_index_covered = any(index in covered_indexes for index in index_set)
         if is_any_index_covered:
             continue
         for index in index_set:
@@ -150,11 +146,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
                 masked_token = "[MASK]"
             else:
                 # 10% of the time, keep original
-                if random() < 0.5:
-                    masked_token = tokens[index]
-                # 10% of the time, replace with random word
-                else:
-                    masked_token = choice(vocab_list)
+                masked_token = tokens[index] if random() < 0.5 else choice(vocab_list)
             masked_lms.append(MaskedLmInstance(index=index, label=tokens[index]))
             tokens[index] = masked_token
 
@@ -239,8 +231,8 @@ def create_instances_from_document(
                         tokens_b.extend(current_chunk[j])
                 truncate_seq_pair(tokens_a, tokens_b, max_num_tokens)
 
-                assert len(tokens_a) >= 1
-                assert len(tokens_b) >= 1
+                assert tokens_a
+                assert tokens_b
 
                 tokens = ["[CLS]"] + tokens_a + ["[SEP]"] + tokens_b + ["[SEP]"]
                 # The segment IDs are 0 for the [CLS] token, the A tokens and the first [SEP]

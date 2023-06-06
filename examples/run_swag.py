@@ -70,17 +70,17 @@ class SwagExample(object):
 
     def __repr__(self):
         l = [
-            "swag_id: {}".format(self.swag_id),
-            "context_sentence: {}".format(self.context_sentence),
-            "start_ending: {}".format(self.start_ending),
-            "ending_0: {}".format(self.endings[0]),
-            "ending_1: {}".format(self.endings[1]),
-            "ending_2: {}".format(self.endings[2]),
-            "ending_3: {}".format(self.endings[3]),
+            f"swag_id: {self.swag_id}",
+            f"context_sentence: {self.context_sentence}",
+            f"start_ending: {self.start_ending}",
+            f"ending_0: {self.endings[0]}",
+            f"ending_1: {self.endings[1]}",
+            f"ending_2: {self.endings[2]}",
+            f"ending_3: {self.endings[3]}",
         ]
 
         if self.label is not None:
-            l.append("label: {}".format(self.label))
+            l.append(f"label: {self.label}")
 
         return ", ".join(l)
 
@@ -110,7 +110,7 @@ def read_swag_examples(input_file, is_training):
         lines = []
         for line in reader:
             if sys.version_info[0] == 2:
-                line = list(unicode(cell, 'utf-8') for cell in line)
+                line = [unicode(cell, 'utf-8') for cell in line]
             lines.append(line)
 
     if is_training and lines[0][-1] != 'label':
@@ -118,22 +118,21 @@ def read_swag_examples(input_file, is_training):
             "For training, the input file must contain a label column."
         )
 
-    examples = [
+    return [
         SwagExample(
-            swag_id = line[2],
-            context_sentence = line[4],
-            start_ending = line[5], # in the swag dataset, the
-                                         # common beginning of each
-                                         # choice is stored in "sent2".
-            ending_0 = line[7],
-            ending_1 = line[8],
-            ending_2 = line[9],
-            ending_3 = line[10],
-            label = int(line[11]) if is_training else None
-        ) for line in lines[1:] # we skip the line with the column names
+            swag_id=line[2],
+            context_sentence=line[4],
+            start_ending=line[5],  # in the swag dataset, the
+            # common beginning of each
+            # choice is stored in "sent2".
+            ending_0=line[7],
+            ending_1=line[8],
+            ending_2=line[9],
+            ending_3=line[10],
+            label=int(line[11]) if is_training else None,
+        )
+        for line in lines[1:]  # we skip the line with the column names
     ]
-
-    return examples
 
 def convert_examples_to_features(examples, tokenizer, max_seq_length,
                                  is_training):
@@ -161,7 +160,7 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
         start_ending_tokens = tokenizer.tokenize(example.start_ending)
 
         choices_features = []
-        for ending_index, ending in enumerate(example.endings):
+        for ending in example.endings:
             # We create a copy of the context tokens in order to be
             # able to shrink it according to ending_tokens
             context_tokens_choice = context_tokens[:]
@@ -193,15 +192,15 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
         label = example.label
         if example_index < 5:
             logger.info("*** Example ***")
-            logger.info("swag_id: {}".format(example.swag_id))
+            logger.info(f"swag_id: {example.swag_id}")
             for choice_idx, (tokens, input_ids, input_mask, segment_ids) in enumerate(choices_features):
-                logger.info("choice: {}".format(choice_idx))
-                logger.info("tokens: {}".format(' '.join(tokens)))
-                logger.info("input_ids: {}".format(' '.join(map(str, input_ids))))
-                logger.info("input_mask: {}".format(' '.join(map(str, input_mask))))
-                logger.info("segment_ids: {}".format(' '.join(map(str, segment_ids))))
+                logger.info(f"choice: {choice_idx}")
+                logger.info(f"tokens: {' '.join(tokens)}")
+                logger.info(f"input_ids: {' '.join(map(str, input_ids))}")
+                logger.info(f"input_mask: {' '.join(map(str, input_mask))}")
+                logger.info(f"segment_ids: {' '.join(map(str, segment_ids))}")
             if is_training:
-                logger.info("label: {}".format(label))
+                logger.info(f"label: {label}")
 
         features.append(
             InputFeatures(

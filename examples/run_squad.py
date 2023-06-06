@@ -76,10 +76,9 @@ class SquadExample(object):
 
     def __repr__(self):
         s = ""
-        s += "qas_id: %s" % (self.qas_id)
-        s += ", question_text: %s" % (
-            self.question_text)
-        s += ", doc_tokens: [%s]" % (" ".join(self.doc_tokens))
+        s += f"qas_id: {self.qas_id}"
+        s += f", question_text: {self.question_text}"
+        s += f', doc_tokens: [{" ".join(self.doc_tokens)}]'
         if self.start_position:
             s += ", start_position: %d" % (self.start_position)
         if self.end_position:
@@ -125,9 +124,7 @@ def read_squad_examples(input_file, is_training, version_2_with_negative):
         input_data = json.load(reader)["data"]
 
     def is_whitespace(c):
-        if c == " " or c == "\t" or c == "\r" or c == "\n" or ord(c) == 0x202F:
-            return True
-        return False
+        return c == " " or c == "\t" or c == "\r" or c == "\n" or ord(c) == 0x202F
 
     examples = []
     for entry in input_data:
@@ -176,7 +173,7 @@ def read_squad_examples(input_file, is_training, version_2_with_negative):
                         actual_text = " ".join(doc_tokens[start_position:(end_position + 1)])
                         cleaned_answer_text = " ".join(
                             whitespace_tokenize(orig_answer_text))
-                        if actual_text.find(cleaned_answer_text) == -1:
+                        if cleaned_answer_text not in actual_text:
                             logger.warning("Could not find answer: '%s' vs. '%s'",
                                            actual_text, cleaned_answer_text)
                             continue
