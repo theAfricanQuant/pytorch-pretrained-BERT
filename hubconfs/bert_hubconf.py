@@ -92,8 +92,7 @@ def bertTokenizer(*args, **kwargs):
         >>> ids = tokenizer.convert_tokens_to_ids(toks)
         [8667, 28136, 1291, 28125]
     """
-    tokenizer = BertTokenizer.from_pretrained(*args, **kwargs)
-    return tokenizer
+    return BertTokenizer.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -121,8 +120,7 @@ def bertModel(*args, **kwargs):
         >>> with torch.no_grad():
                 encoded_layers, _ = model(tokens_tensor, segments_tensors)
     """
-    model = BertModel.from_pretrained(*args, **kwargs)
-    return model
+    return BertModel.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -150,8 +148,7 @@ def bertForNextSentencePrediction(*args, **kwargs):
         >>> with torch.no_grad():
                 next_sent_classif_logits = model(tokens_tensor, segments_tensors)
     """
-    model = BertForNextSentencePrediction.from_pretrained(*args, **kwargs)
-    return model
+    return BertForNextSentencePrediction.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -176,8 +173,7 @@ def bertForPreTraining(*args, **kwargs):
         >>> model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertForPreTraining', 'bert-base-cased')
         >>> masked_lm_logits_scores, seq_relationship_logits = model(tokens_tensor, segments_tensors)
     """
-    model = BertForPreTraining.from_pretrained(*args, **kwargs)
-    return model
+    return BertForPreTraining.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -209,8 +205,7 @@ def bertForMaskedLM(*args, **kwargs):
         >>> predicted_token = tokenizer.convert_ids_to_tokens([predicted_index])[0]
         'henson'
     """
-    model = BertForMaskedLM.from_pretrained(*args, **kwargs)
-    return model
+    return BertForMaskedLM.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -249,8 +244,7 @@ def bertForSequenceClassification(*args, **kwargs):
         >>> labels = torch.tensor([1])
         >>> seq_classif_loss = model(tokens_tensor, segments_tensors, labels=labels) # set model.train() before if training this loss
     """
-    model = BertForSequenceClassification.from_pretrained(*args, **kwargs)
-    return model
+    return BertForSequenceClassification.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -284,8 +278,7 @@ def bertForMultipleChoice(*args, **kwargs):
         >>> labels = torch.tensor([1])
         >>> multiple_choice_loss = model(tokens_tensor, segments_tensors, labels=labels) # set model.train() before if training this loss
     """
-    model = BertForMultipleChoice.from_pretrained(*args, **kwargs)
-    return model
+    return BertForMultipleChoice.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -318,8 +311,7 @@ def bertForQuestionAnswering(*args, **kwargs):
         # set model.train() before if training this loss
         >>> multiple_choice_loss = model(tokens_tensor, segments_tensors, start_positions=start_positions, end_positions=end_positions)
     """
-    model = BertForQuestionAnswering.from_pretrained(*args, **kwargs)
-    return model
+    return BertForQuestionAnswering.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(bert_docstring)
@@ -356,5 +348,4 @@ def bertForTokenClassification(*args, **kwargs):
         >>> labels = torch.tensor([[0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0]])
         >>> classif_loss = model(tokens_tensor, segments_tensors, labels=labels) # set model.train() before if training this loss
     """
-    model = BertForTokenClassification.from_pretrained(*args, **kwargs)
-    return model
+    return BertForTokenClassification.from_pretrained(*args, **kwargs)

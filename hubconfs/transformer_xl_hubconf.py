@@ -52,8 +52,7 @@ def transformerXLTokenizer(*args, **kwargs):
         >>> tokenized_text = tokenizer.tokenize(tokenized_text)
         >>> indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
     """
-    tokenizer = TransfoXLTokenizer.from_pretrained(*args, **kwargs)
-    return tokenizer
+    return TransfoXLTokenizer.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(transformer_xl_docstring)
@@ -86,8 +85,7 @@ def transformerXLModel(*args, **kwargs):
                 hidden_states_1, mems_1 = model(tokens_tensor_1)
                 hidden_states_2, mems_2 = model(tokens_tensor_2, mems=mems_1)
     """
-    model = TransfoXLModel.from_pretrained(*args, **kwargs)
-    return model
+    return TransfoXLModel.from_pretrained(*args, **kwargs)
 
 
 @_append_from_pretrained_docstring(transformer_xl_docstring)
@@ -126,5 +124,4 @@ def transformerXLLMHeadModel(*args, **kwargs):
         >>> predicted_token = tokenizer.convert_ids_to_tokens([predicted_index])[0]
         >>> assert predicted_token == 'who'
     """
-    model = TransfoXLLMHeadModel.from_pretrained(*args, **kwargs)
-    return model
+    return TransfoXLLMHeadModel.from_pretrained(*args, **kwargs)

@@ -23,10 +23,9 @@ def top_k_logits(logits, k):
     """
     if k == 0:
         return logits
-    else:
-        values = torch.topk(logits, k)[0]
-        batch_mins = values[:, -1].view(-1, 1).expand_as(logits)
-        return torch.where(logits < batch_mins, torch.ones_like(logits) * -1e10, logits)
+    values = torch.topk(logits, k)[0]
+    batch_mins = values[:, -1].view(-1, 1).expand_as(logits)
+    return torch.where(logits < batch_mins, torch.ones_like(logits) * -1e10, logits)
 
 def sample_sequence(model, length, start_token=None, batch_size=None, context=None, temperature=1, top_k=0, device='cuda', sample=True):
     if start_token is None:
@@ -39,7 +38,7 @@ def sample_sequence(model, length, start_token=None, batch_size=None, context=No
     output = context
     past = None
     with torch.no_grad():
-        for i in trange(length):
+        for _ in trange(length):
             logits, past = model(prev, past=past)
             logits = logits[:, -1, :] / temperature
             logits = top_k_logits(logits, k=top_k)
@@ -81,17 +80,19 @@ def run_model():
     if args.length == -1:
         args.length = model.config.n_ctx // 2
     elif args.length > model.config.n_ctx:
-        raise ValueError("Can't get samples longer than window size: %s" % model.config.n_ctx)
+        raise ValueError(
+            f"Can't get samples longer than window size: {model.config.n_ctx}"
+        )
 
     while True:
         context_tokens = []
+        generated = 0
         if not args.unconditional:
             raw_text = input("Model prompt >>> ")
             while not raw_text:
                 print('Prompt should not be empty!')
                 raw_text = input("Model prompt >>> ")
             context_tokens = enc.encode(raw_text)
-            generated = 0
             for _ in range(args.nsamples // args.batch_size):
                 out = sample_sequence(
                     model=model, length=args.length,
@@ -106,9 +107,7 @@ def run_model():
                     text = enc.decode(out[i])
                     print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
                     print(text)
-            print("=" * 80)
         else:
-            generated = 0
             for _ in range(args.nsamples // args.batch_size):
                 out = sample_sequence(
                     model=model, length=args.length,
@@ -123,7 +122,8 @@ def run_model():
                     text = enc.decode(out[i])
                     print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
                     print(text)
-            print("=" * 80)
+
+        print("=" * 80)
 
 if __name__ == '__main__':
     run_model()
